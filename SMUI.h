@@ -104,6 +104,7 @@ class smui{
         }
         
         loadConfiguration("/config.json",configdef,smui_config);
+        
         ArduinoOTA.onStart([]() {
             smui_log.log("OTA onStart");
         });
@@ -124,6 +125,13 @@ class smui{
         ArduinoOTA.begin();
         
         smui_httpUpdater.setup(&smui_httpServer);
+        
+        smui_httpServer.on("/", this->mainfunc);
+        smui_httpServer.on("/ajax", this->mainfuncajax);
+        smui_httpServer.on("/setup", this->setupfunc);
+        smui_httpServer.on("/setup/", this->setupfunc);
+        smui_httpServer.on("/setup/ajax", this->setupfuncajax);
+       
         smui_httpServer.begin();
     }
     
@@ -204,7 +212,6 @@ class smui{
 
       }
 
-      // Open file for reading
       File file = SPIFFS.open(filename, "r");
       if (!file) {
         smui_log.log("Failed to open config file, using defaults.");
@@ -271,7 +278,7 @@ class smui{
       
       smui_log.log("Saving config:");  
       smui_log.log(filename);
-      // Delete existing file, otherwise the configuration is appended to the file
+
       if (SPIFFS.exists(filename)) {
         SPIFFS.remove(filename);
       }
@@ -292,11 +299,92 @@ class smui{
         smui_log.log("File print error.");  
       }
         
-      // Close the file (File's destructor doesn't close the file)
       file.close();
 
     }
     
+    String softredir(String s) {
+
+      String s1;
+      s1 = "<script>window.location.href='" + s + "';</script>";
+      return s1;
+
+    }
+    
+    static String templ(unsigned char ajax, String sb) {
+
+      smui_httpServer.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      smui_httpServer.sendHeader("Pragma", "no-cache");
+      smui_httpServer.sendHeader("Expires", "0");
+
+      String s = "";
+
+      if (ajax == 1) {
+        s += sb;
+      } else {
+        s += "<!DOCTYPE HTML>\r\n<html><head><script>";
+
+        s += String("") + R"=(
+          var r=1;
+          function ajf() {
+            var x=new XMLHttpRequest(); 
+            x.timeout = 3000; 
+            var u=window.location.href;
+            u+=(u.substr(u.length-1)=="/"?"ajax":"/ajax");
+            x.open('GET',u,true);
+            x.onload =  function() {
+              if (x.status===200) {
+                document.getElementById('d').innerHTML=x.responseText; 
+                if (r) setTimeout(ajf,1500);
+              } else {
+                if (confirm('Bad response, retry refresh?')) {} else { r=0; } 
+              }
+            }        
+            x.ontimeout=function(e) {
+                if (r) setTimeout(ajf,1500);
+            }
+            x.send(null);
+          };
+
+          function isi(e,u){
+            var c = (e.which) ? e.which : e.keyCode
+            if (c==8 || c==37) return;
+            e.target.value=e.target.value.replace(/[^0-9]/g,"");
+            if (e.target.value>u) e.target.value=u;
+          }
+          
+          ajf();
+          
+            )=";
+
+        s += "</script></head><body><div id=\"d\">\r\n";
+        s += "</div><div id=\"s\">\r\n";
+        s += sb;
+        s += "</div></body></html>\n";
+      }
+      return s;
+    }
+    
+    static void mainfunc() {
+        String s = "main static content";
+        smui_httpServer.send(200, "text/html", templ(0, s));
+    }
+    
+    static void mainfuncajax() {
+        String s = "main dynamic content";
+        smui_httpServer.send(200, "text/html", templ(1, s));
+    }
+    
+    static void setupfunc() {
+        String s = "<a href=\"/\">main</a><br /><br /><a href=\"/update\">FW Update!</a><br /><a href=\"/setup?reset=1\">Reset!</a><br /><a href=\"/setup?factoryreset=1\">Factory Reset!</a>";
+        smui_httpServer.send(200, "text/html", templ(0, s));
+    }
+    
+    static void setupfuncajax() {
+        String s = "setup dynamic content";
+        smui_httpServer.send(200, "text/html", templ(1, s));
+    }
+
     void loop(){
        ArduinoOTA.handle();
        smui_httpServer.handleClient();   
