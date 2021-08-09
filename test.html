@@ -1,0 +1,78 @@
+<html>
+<head>
+<script>
+
+var cf={
+   "elsokey":[
+      "def",
+      "description"
+   ],
+   "elsokeyszam1":[
+      3,
+      "descriptionszam"
+   ],
+   "elsokeybool1":[
+      true,
+      "descriptionbool"
+   ],
+   "masodikkey":[
+      {
+            "innerkey1":[
+               "def",
+               "desc"
+            ]
+            ,
+            "innerkey2":[
+               1,
+               "desc2"
+            ]
+      }
+      ,
+      "2desc"
+   ]
+};
+
+function c(s,c=""){
+    let e=document.createElement(s);
+    (typeof c=="object")?Object.assign(e,c):e.innerHTML=c;
+    return e;
+}
+
+function a(e,c){
+    typeof c=="string"?e.innerHTML+=c:e.appendChild(c);
+}
+function q(s){
+    return document.querySelectorAll(s);
+}
+function r(j){
+    let b="";
+    for (var k in j){
+        let v=c("div");
+        a(v,c("label",j[k][1]));
+        console.log(typeof j[k][0]);
+        switch (typeof j[k][0]){
+            case 'boolean':
+            case 'number': a(v,c("input",{type:"number",name: k, value: j[k][0]}));
+            break;
+            case 'string': a(v,c("input",{type:"text",name: k, value: j[k][0]}));
+            break;
+            case 'object': a(v,c("a","+")); a(v,c("a","-")); a(v,r(j[k][0]));
+            break;
+        }
+        b+=v.outerHTML;
+    }
+    return b;
+}
+
+
+
+</script>
+</head>
+<body>
+    <div id="c">
+    </div>
+</body>
+<script>
+    a(q("#c")[0],r(cf));
+</script>
+</html>
