@@ -39,13 +39,14 @@ function c(s,c=""){
 }
 
 function a(e,c){
-    typeof c=="string"?e.innerHTML+=c:e.appendChild(c);
+    if (Array.isArray(c)) c.forEach(function(i){e.appendChild(i)});
+    else typeof c=="string"?e.innerHTML+=c:e.appendChild(c);
 }
-function q(s){
-    return document.querySelectorAll(s);
+function q(s,o=document){
+    return o.querySelectorAll(s);
 }
 function r(j){
-    let b="";
+    let b=[];
     for (var k in j){
         let v=c("div");
         a(v,c("label",j[k][1]));
@@ -56,10 +57,11 @@ function r(j){
             break;
             case 'string': a(v,c("input",{type:"text",name: k, value: j[k][0]}));
             break;
-            case 'object': a(v,c("a","+")); a(v,c("a","-")); a(v,r(j[k][0]));
+            //
+            case 'object': a(v,c("a",{innerText:"+",onclick:function(){q('div',this.parentNode).forEach(function(i){a(i.parentNode,i.cloneNode(true))})} })); a(v,c("a","-")); a(v,r(j[k][0]));
             break;
         }
-        b+=v.outerHTML;
+        b.push(v);
     }
     return b;
 }
