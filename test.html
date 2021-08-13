@@ -41,6 +41,7 @@ function c(s,c=""){
 function a(e,c){
     if (Array.isArray(c)) c.forEach(function(i){e.appendChild(i)});
     else typeof c=="string"?e.innerHTML+=c:e.appendChild(c);
+    return e;
 }
 function q(s,o=document){
     return o.querySelectorAll(s);
@@ -57,8 +58,12 @@ function r(j){
             break;
             case 'string': a(v,c("input",{type:"text",name: k, value: j[k][0]}));
             break;
-            //
-            case 'object': a(v,c("a",{innerText:"+",onclick:function(){q('div',this.parentNode).forEach(function(i){a(i.parentNode,i.cloneNode(true))})} })); a(v,c("a","-")); a(v,r(j[k][0]));
+            //a(c("div"),c("a",{innerText:"+",onclick:function(){q('div',this.parentNode).forEach(function(i){a(i.parentNode,i.cloneNode(true))})} }))
+            //q('div',this.parentNode).forEach(function(i){a(i.parentNode,i.cloneNode(true))})
+            //a(v,a(c("div"),[c("a",{innerText:"+",onclick:function(){} }),c("a",{innerText:"-",onclick:function(){} })])); 
+
+            case 'object': a(v,[c("a",{innerText:"+",onclick:function(){a(this.parentNode,q("div",this.parentNode)[0].cloneNode(true))} }),c("a",{innerText:"-",onclick:function(){} })]); 
+                        a(v,a(c("div"),r(j[k][0])));
             break;
         }
         b.push(v);
