@@ -331,13 +331,13 @@ class smui{
             x.timeout = 3000; 
             var u=window.location.href;
             u+=(u.substr(u.length-1)=="/"?"ajax":"/ajax");
-            x.open('GET',u,true);
+            x.open("GET",u,true);
             x.onload =  function() {
               if (x.status===200) {
-                document.getElementById('d').innerHTML=x.responseText; 
+                document.getElementById("d").innerHTML=x.responseText; 
                 if (r) setTimeout(ajf,1500);
               } else {
-                if (confirm('Bad response, retry refresh?')) {} else { r=0; } 
+                if (confirm("Bad response, retry refresh?")) {} else { r=0; } 
               }
             }        
             x.ontimeout=function(e) {
@@ -352,14 +352,30 @@ class smui{
             e.target.value=e.target.value.replace(/[^0-9]/g,"");
             if (e.target.value>u) e.target.value=u;
           }
+
+          function cf(){
+            if (confirm("Sure?")){
+              return true;
+            }
+            return false;
+          }
           
           ajf();
           
             )=";
 
-        s += "</script></head><body><div id=\"d\">\r\n";
-        s += "</div><div id=\"s\">\r\n";
+        s += "</script></head><body>";
+        s += R"=(
+        <ul id="m">
+          <li><a href="/">Main dashboard</a></li>
+          <li><a href="/setup">Main setup</a></li>
+        </ul>
+        <div id="d">
+        </div>
+        <div id="s">)=";
+
         s += sb;
+
         s += "</div></body></html>\n";
       }
       return s;
@@ -376,7 +392,45 @@ class smui{
     }
     
     static void setupfunc() {
-        String s = "<a href=\"/\">main</a><br /><br /><a href=\"/update\">FW Update!</a><br /><a href=\"/setup?reset=1\">Reset!</a><br /><a href=\"/setup?factoryreset=1\">Factory Reset!</a>";
+
+        String s="<pre>";
+
+        char tmp[200];
+        //kesobbi updatehez az infok
+        uint32_t realSize = ESP.getFlashChipRealSize();
+        uint32_t ideSize = ESP.getFlashChipSize();
+        FlashMode_t ideMode = ESP.getFlashChipMode();
+
+        sprintf(tmp, "Flash real id:   %08X\n", ESP.getFlashChipId());
+        s += tmp;
+        sprintf(tmp, "Flash real size: %u\n", realSize);
+        s += tmp;
+
+        sprintf(tmp, "Flash ide size: %u\n", ideSize);
+        s += tmp;
+        sprintf(tmp, "Flash ide speed: %u\n", ESP.getFlashChipSpeed());
+        s += tmp;
+        sprintf(tmp, "Flash ide mode:  %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
+        s += tmp;
+        if (ideSize != realSize) {
+          sprintf(tmp, "Chip conf wrong!\n");
+          s += tmp;
+        } else {
+          sprintf(tmp, "Chip conf ok.\n");
+          s += tmp;
+        }  
+        
+        s += "</pre>";
+
+        s += R"=(   
+        <form method="POST" action="/update" enctype="multipart/form-data">
+         Firmware:<br>
+         <input type="file" accept=".bin,.bin.gz" name="firmware" />
+         <a href="javascript:void(0);" onclick="cf()?this.closest('form').submit():void(0);">Update Firmware</a>
+        </form>  
+        <a href="/setup?reset=1" onclick="return cf();">Reset!</a><br />
+        <a href="/setup?factoryreset=1" onclick="cf();">Factory Reset!</a>)=";
+
         smui_httpServer.send(200, "text/html", templ(0, s));
     }
     
@@ -386,8 +440,23 @@ class smui{
     }
 
     void loop(){
-       ArduinoOTA.handle();
-       smui_httpServer.handleClient();   
+      ArduinoOTA.handle();
+      smui_httpServer.handleClient();   
+
+      if (  httpServer.hasArg("reset") ) {
+        i = httpServer.arg("reset").toInt();
+    
+        if (i==1) {
+
+        restartflag=1;
+        }
+        
+      }
+    
+
+  }
+
+
     }
     
 };
