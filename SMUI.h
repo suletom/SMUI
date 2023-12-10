@@ -16,6 +16,7 @@ ESP8266HTTPUpdateServer smui_httpUpdater;
 String smui_logdata;
 int smui_loglines=0;
 unsigned char smui_max_logline=50;
+unsigned char smui_restartflag=0;
 
 pjsonstore smui_config;
 
@@ -23,6 +24,11 @@ class smui_logger{
   public: 
   
   smui_logger(){}
+  
+  void getlog(unsigned long from){
+    
+  }
+  
   void setloglines(unsigned char maxlines){
     smui_max_logline=maxlines;
   }
@@ -105,6 +111,8 @@ class smui{
         
         loadConfiguration("/config.json",configdef,smui_config);
         
+        initwifi();
+        
         ArduinoOTA.onStart([]() {
             smui_log.log("OTA onStart");
         });
@@ -128,46 +136,13 @@ class smui{
         
         smui_httpServer.on("/", this->mainfunc);
         smui_httpServer.on("/ajax", this->mainfuncajax);
-        smui_httpServer.on("/setup", this->setupfunc);
-        smui_httpServer.on("/setup/", this->setupfunc);
-        smui_httpServer.on("/setup/ajax", this->setupfuncajax);
        
         smui_httpServer.begin();
+        
     }
     
-    String _getespflashconf() {
-    
-      char tmp[200];
-      String flashconf="";
-
-      //kesobbi updatehez az infok
-      uint32_t realSize = ESP.getFlashChipRealSize();
-      uint32_t ideSize = ESP.getFlashChipSize();
-      FlashMode_t ideMode = ESP.getFlashChipMode();
-
-      sprintf(tmp, "Flash real id:   %08X\n", ESP.getFlashChipId());
-      flashconf += tmp;
-      sprintf(tmp, "Flash real size: %u\n", realSize);
-      flashconf += tmp;
-
-      sprintf(tmp, "Flash ide size: %u\n", ideSize);
-      flashconf += tmp;
-      sprintf(tmp, "Flash ide speed: %u\n", ESP.getFlashChipSpeed());
-      flashconf += tmp;
-      sprintf(tmp, "Flash ide mode:  %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
-      flashconf += tmp;
-      if (ideSize != realSize) {
-        sprintf(tmp, "Chip conf wrong!\n");
-        flashconf += tmp;
-      } else {
-        sprintf(tmp, "Chip conf ok.\n");
-        flashconf += tmp;
-      }
-    
-      return flashconf;
-    }
-    
-    String specch(String s) {
+        
+    static String specch(String s) {
       String tmp;
 
       tmp = s;
@@ -180,7 +155,7 @@ class smui{
       return tmp;
     }
     
-    void redirtopage(String s) {
+    static void redirtopage(String s) {
       smui_httpServer.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       smui_httpServer.sendHeader("Pragma", "no-cache");
       smui_httpServer.sendHeader("Expires", "0");
@@ -189,7 +164,7 @@ class smui{
       smui_httpServer.send(302);
     }
     
-    void loadConfiguration(const char *filename,String &configdefstr,pjsonstore &dest) {
+    static void loadConfiguration(const char *filename,String &configdefstr,pjsonstore &dest) {
 
       smui_log.log("loadConfiguration start...");
       smui_log.log(filename);
@@ -274,7 +249,7 @@ class smui{
   
     }
     
-    void saveConfiguration(const char *filename, pjsonstore &source) {
+    static void saveConfiguration(const char *filename, pjsonstore &source) {
       
       smui_log.log("Saving config:");  
       smui_log.log(filename);
@@ -303,13 +278,22 @@ class smui{
 
     }
     
-    String softredir(String s) {
+    static String softredir(String s) {
 
       String s1;
       s1 = "<script>window.location.href='" + s + "';</script>";
       return s1;
 
     }
+    
+    
+    static void refresh(int msec) { 
+
+        String s="setTimeout(function(){ document.body.innerHTML =  \"reloading...\"; },1000); setTimeout(function(){ window.location.href=\"/\"; },"+String(msec)+");";
+        smui_httpServer.send(200, "text/html", templ(3, s));
+
+    }   
+
     
     static String templ(unsigned char ajax, String sb) {
 
@@ -324,75 +308,107 @@ class smui{
       } else {
         s += "<!DOCTYPE HTML>\r\n<html><head><script>";
 
-        s += String("") + R"=(
-          var r=1;
-          function ajf() {
-            var x=new XMLHttpRequest(); 
-            x.timeout = 3000; 
-            var u=window.location.href;
-            u+=(u.substr(u.length-1)=="/"?"ajax":"/ajax");
-            x.open("GET",u,true);
-            x.onload =  function() {
-              if (x.status===200) {
-                document.getElementById("d").innerHTML=x.responseText; 
-                if (r) setTimeout(ajf,1500);
-              } else {
-                if (confirm("Bad response, retry refresh?")) {} else { r=0; } 
+        if (ajax==0) {
+            s += String("") + R"=(
+              var r=1;
+              function ajf() {
+                var x=new XMLHttpRequest(); 
+                x.timeout = 3000; 
+                var u=window.location.href;
+                u+=(u.substr(u.length-1)=="/"?"ajax":"/ajax");
+                x.open("GET",u,true);
+                x.onload =  function() {
+                  if (x.status===200) {
+                    let jd=null;
+                    try {
+                        jd=JSON.parse(x.responseText);
+                    }catch(e){  }
+                    if (jd!==null && jd.text!=undefined){
+                        document.getElementById("d").innerHTML=jd.text;
+                        document.getElementById("l").innerHTML=jd.log;
+                    }else{
+                        document.getElementById("d").innerHTML=x.responseText; 
+                    }    
+                    if (r) setTimeout(ajf,1500);
+                  } else {
+                    if (confirm("Bad response, retry refresh?")) {} else { r=0; } 
+                  }
+                }        
+                x.ontimeout=function(e) {
+                    if (r) setTimeout(ajf,1500);
+                }
+                x.send(null);
+              };
+
+              function isi(e,u){
+                var c = (e.which) ? e.which : e.keyCode
+                if (c==8 || c==37) return;
+                e.target.value=e.target.value.replace(/[^0-9]/g,"");
+                if (e.target.value>u) e.target.value=u;
               }
-            }        
-            x.ontimeout=function(e) {
-                if (r) setTimeout(ajf,1500);
-            }
-            x.send(null);
-          };
 
-          function isi(e,u){
-            var c = (e.which) ? e.which : e.keyCode
-            if (c==8 || c==37) return;
-            e.target.value=e.target.value.replace(/[^0-9]/g,"");
-            if (e.target.value>u) e.target.value=u;
-          }
-
-          function cf(){
-            if (confirm("Sure?")){
-              return true;
-            }
-            return false;
-          }
-          
-          ajf();
-          
-            )=";
+              function cf(){
+                if (confirm("Sure?")){
+                  return true;
+                }
+                return false;
+              }
+              
+              ajf();
+              
+                )=";
+        }else{
+            s += sb;
+        }
 
         s += "</script></head><body>";
         s += R"=(
         <ul id="m">
           <li><a href="/">Main dashboard</a></li>
-          <li><a href="/setup">Main setup</a></li>
         </ul>
         <div id="d">
         </div>
         <div id="s">)=";
 
-        s += sb;
+        if (ajax<2){
+            s += sb;
+        }    
 
-        s += "</div></body></html>\n";
+        s += "</div><div id=\"l\"></div></body></html>\n";
       }
       return s;
     }
     
     static void mainfunc() {
-        String s = "main static content";
-        smui_httpServer.send(200, "text/html", templ(0, s));
-    }
     
-    static void mainfuncajax() {
-        String s = "main dynamic content";
-        smui_httpServer.send(200, "text/html", templ(1, s));
-    }
-    
-    static void setupfunc() {
+        int i=0;
+        
+        if (  smui_httpServer.hasArg("reset") ) {
+            i = smui_httpServer.arg("reset").toInt();
+            
+            if (i==1) {
+              smui_restartflag=1;
+            }
+            
+            refresh(12000);
+            return;
+        }
 
+        if (  smui_httpServer.hasArg("factoryreset") ) {
+            i = smui_httpServer.arg("factoryreset").toInt();
+            if (i==1){
+              smui_config.unset();
+              saveConfiguration("/config.json",smui_config);
+              
+              smui_log.log("Factory reset: Empty Config! Reboot....");
+              smui_restartflag=1;
+
+              refresh(12000);
+              return;
+            }
+        }
+    
+        
         String s="<pre>";
 
         char tmp[200];
@@ -428,35 +444,80 @@ class smui{
          <input type="file" accept=".bin,.bin.gz" name="firmware" />
          <a href="javascript:void(0);" onclick="cf()?this.closest('form').submit():void(0);">Update Firmware</a>
         </form>  
-        <a href="/setup?reset=1" onclick="return cf();">Reset!</a><br />
-        <a href="/setup?factoryreset=1" onclick="cf();">Factory Reset!</a>)=";
+        <a href="javascript:void(0);" onclick="">Backup config!</a><br />
+        <a href="javascript:void(0);" onclick="">Load config!</a><br />
+        <a href="/?apply=1" onclick="">Apply config!</a><br />
+        <a href="/?reset=1" onclick="return cf();">Reset!</a><br />
+        <a href="/?factoryreset=1" onclick="cf();">Factory Reset!</a>)=";
+
+        s+="<textarea id=\"c\">";
+        String ct;
+        smui_config.to_json(ct);
+        s+=ct;
+        s+="</textarea>";
 
         smui_httpServer.send(200, "text/html", templ(0, s));
+        
     }
     
-    static void setupfuncajax() {
-        String s = "setup dynamic content";
+    static void mainfuncajax() {
+    
+        String s = "main dynamic content";
         smui_httpServer.send(200, "text/html", templ(1, s));
     }
-
+    
     void loop(){
-      ArduinoOTA.handle();
-      smui_httpServer.handleClient();   
+       ArduinoOTA.handle();
+       smui_httpServer.handleClient();   
+       if (smui_restartflag==1){
+            smui_restartflag=0;
 
-      if (  httpServer.hasArg("reset") ) {
-        i = httpServer.arg("reset").toInt();
+            //ujra, mert nem zarja le a kapcsolatot elotte
+            unsigned long t=millis();
+ 
+            smui_log.log("Waiting to flush contents...");
+            while(millis()-t<1000){
+              smui_httpServer.handleClient();
+            }
+            smui_log.log("Reset...");
+            ESP.restart();
+            return;
+       }
+    }
     
-        if (i==1) {
+    void initwifi(){
 
-        restartflag=1;
-        }
-        
+      smui_log.log("INIT Wifi: WIFI_AP_STA");
+      WiFi.mode(WIFI_AP_STA);
+
+      uint8_t mac[WL_MAC_ADDR_LENGTH];
+      WiFi.softAPmacAddress(mac);
+      String macID = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
+                     String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
+      macID.toUpperCase();
+      String AP_NameString = String(smui_config["smui_ssid"].get_value().pj_string) + macID;
+
+      char AP_NameChar[AP_NameString.length() + 1];
+      memset(AP_NameChar, 0, AP_NameString.length() + 1);
+
+      for (int i=0; i<AP_NameString.length(); i++)
+        AP_NameChar[i] = AP_NameString.charAt(i);
+
+      smui_log.log("Creating AP:");
+      smui_log.log(AP_NameChar);
+      smui_log.log(smui_config["smui_wifipw"].get_value().pj_string);
+      
+      WiFi.softAP(AP_NameChar,String(smui_config["smui_wifipw"].get_value().pj_string).c_str() );
+
+      if (smui_config.has_key("smui_ap_to_connect")){
+          if (String(smui_config["smui_ap_to_connect"].get_value().pj_string).length()>0){
+              smui_log.log("Connecting to AP:");
+              
+              smui_log.log(smui_config["smui_ap_to_connect"].get_value().pj_string);
+              WiFi.begin(smui_config["smui_ap_to_connect"].get_value().pj_string, smui_config["smui_ap_pw"].get_value().pj_string);
+          }
       }
-    
-
-  }
-
-
+      
     }
     
 };
