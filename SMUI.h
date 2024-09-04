@@ -10,10 +10,14 @@
 #include <PJsonstore.h>
 #include "FS.h"
 
+//https://tttapa.github.io/ESP8266/Chap12%20-%20Uploading%20to%20Server.html
+
 #define SMUI_CONFIG_TOKEN 96
 
 ESP8266WebServer smui_httpServer(80);
 ESP8266HTTPUpdateServer smui_httpUpdater;
+
+File fsUploadFile; 
 
 String smui_logdata;
 int smui_loglines=0;
@@ -343,15 +347,25 @@ class smui{
                 x.send(null);
               };
 
-              function post(u,d){
+              function postfile(u,fn,d){
                 var xhr = new XMLHttpRequest();
                 xhr.open("POST", u, true);
+                var boundary = '---------------------------7da24f2e50046';
+                xhr.setRequestHeader('Content-Type', 'multipart/form-data; boundary=" + boundary);
+                var body = "" +     
+                '--' + boundary + '\r\n' + 
+                'Content-Disposition: form-data; name="file[]"; filename="' + fn + '"' + '\r\n' + 
+                'Content-Type: text/plain' + '\r\n' + 
+                '' + '\r\n' + 
+                d + '\r\n' + 
+                '--' + boundary + '--' + 
+                ''; 
                 xhr.onreadystatechange = function() {
                   if (xhr.readyState == XMLHttpRequest.DONE) {
                       alert(xhr.responseText);
                   }
                 }
-                xhr.send(JSON.stringify(d));
+                xhr.send(body);
               }
 
               function isi(e,u){
@@ -392,15 +406,30 @@ class smui{
       }
       return s;
     }
-    
-    static void conffunc() {
+  
+   static void conffunc() {
 
-        String tm="";
-
-        tm=smui_httpServer.arg("plain");
-        smui_config.from_json(SMUI_CONFIG_TOKEN,tm.c_str());
-
+        HTTPUpload& upload = smui_httpServer.upload();
+        if(upload.status == UPLOAD_FILE_START){
+          String filename = upload.filename;
+          if(!filename.startsWith("/")) filename = "/"+filename;
+          
+          fsUploadFile = SPIFFS.open(filename, "w");
+          filename = String();
+        } else if(upload.status == UPLOAD_FILE_WRITE){
+          if(fsUploadFile)
+            fsUploadFile.write(upload.buf, upload.currentSize);
+        } else if(upload.status == UPLOAD_FILE_END){
+          if(fsUploadFile) {
+            fsUploadFile.close();
             
+            server.sendHeader("Location","/success.html");      // Redirect the client to the success page
+            server.send(303);
+          } else {
+            server.send(500, "text/plain", "500: couldn't create file");
+          }
+        }
+        
         String s = "OK:"+tm;
         smui_httpServer.send(200, "text/html", templ(1, s));
         return;
@@ -472,7 +501,7 @@ class smui{
          <input type="file" accept=".bin,.bin.gz" name="firmware" />
          <a href="javascript:void(0);" onclick="cf()?this.closest('form').submit():void(0);">Update Firmware</a>
         </form>  
-        <a href="javascript:void(0);" onclick="post('/config',document.getElementById('c').value);">Apply config!</a><br />
+        <a href="javascript:void(0);" onclick="postfile('/config',document.getElementById('c').value);">Apply config!</a><br />
         <a href="/?reset=1" onclick="return cf();">Reset!</a><br />
         <a href="/?factoryreset=1" onclick="cf();">Factory Reset!</a>)=";
 
