@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title></title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: grey;
+    }
+
+    #m {
+      padding: 10px;
+      background: khaki;
+    }
+
+    a,
+    a:visited {
+      color: red;
+      background-color: lightgray;
+      border-radius: 5px;
+      padding: 5px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    a:hover {
+      background-color: lightskyblue;
+    }
+
+    a.a {
+      background-color: lightsalmon;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="m">
+    <a href="/">Main dashboard</a>
+    <a href="/setup">System setup</a>
+    <a href="/configure">Configure</a>
+  </div>
+  <div id="d">
+  </div>
+  <div id="s">
+    <!--sc-->
+  </div>
+
+  <script>
+    var r = 1;
+    function ajf() {
+      var x = new XMLHttpRequest();
+      x.timeout = 3000;
+      var u = window.location.href;
+      u += (u.substr(u.length - 1) == "/" ? "ajax" : "/ajax");
+      x.open("GET", u, true);
+      x.onload = function () {
+        if (x.status === 200) {
+          let jd = null;
+          try {
+            jd = JSON.parse(x.responseText);
+          } catch (e) { }
+          if (jd !== null && jd.text != undefined) {
+            document.getElementById("d").innerHTML = jd.text;
+            document.getElementById("l").innerHTML = jd.log;
+          } else {
+            document.getElementById("d").innerHTML = x.responseText;
+          }
+          if (r) setTimeout(ajf, 1500);
+        } else {
+          if (confirm("Bad response, retry refresh?")) { } else { r = 0; }
+        }
+      }
+      x.ontimeout = function (e) {
+        if (r) setTimeout(ajf, 1500);
+      }
+      x.send(null);
+    };
+
+    function postfile(u, fn, d) {
+      r = 0;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", u, true);
+      var boundary = '---------------------------7da24f2e50046';
+      xhr.setRequestHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
+      var body = "" +
+        '--' + boundary + '\r\n' +
+        'Content-Disposition: form-data; name="file[]"; filename="' + fn + '"' + '\r\n' +
+        'Content-Type: text/plain' + '\r\n' +
+        '' + '\r\n' +
+        d + '\r\n' +
+        '--' + boundary + '--' +
+        '';
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+          alert(xhr.responseText);
+          r = 1;
+        }
+      }
+      xhr.send(body);
+    }
+
+    function isi(e, u) {
+      var c = (e.which) ? e.which : e.keyCode
+      if (c == 8 || c == 37) return;
+      e.target.value = e.target.value.replace(/[^0-9]/g, "");
+      if (e.target.value > u) e.target.value = u;
+    }
+
+    function cf() {
+      if (confirm("Sure?")) {
+        return true;
+      }
+      return false;
+    }
+
+    function c(s, c = "") {
+      let e = document.createElement(s);
+      (typeof c == "object") ? Object.assign(e, c) : e.innerHTML = c;
+      return e;
+    }
+
+    function a(e, c) {
+      if (Array.isArray(c)) c.forEach(function (i) { e.appendChild(i) });
+      else typeof c == "string" ? e.innerHTML += c : e.appendChild(c);
+      return e;
+    }
+    function q(s, o = document) {
+      return o.querySelectorAll(s);
+    }
+    function re(j) {
+      let b = [];
+      for (var k in j) {
+        let v = c("div");
+        a(v, c("label", j[k][1]));
+        console.log(typeof j[k][0]);
+        switch (typeof j[k][0]) {
+          case 'boolean':
+          case 'number': a(v, c("input", { type: "number", name: k, value: j[k][0] }));
+            break;
+          case 'string': a(v, c("input", { type: "text", name: k, value: j[k][0] }));
+            break;
+          //a(c("div"),c("a",{innerText:"+",onclick:function(){q('div',this.parentNode).forEach(function(i){a(i.parentNode,i.cloneNode(true))})} }))
+          //q('div',this.parentNode).forEach(function(i){a(i.parentNode,i.cloneNode(true))})
+          //a(v,a(c("div"),[c("a",{innerText:"+",onclick:function(){} }),c("a",{innerText:"-",onclick:function(){} })])); 
+
+          case 'object': a(v, [c("a", { innerText: "+", onclick: function () { a(this.parentNode, q("div", this.parentNode)[0].cloneNode(true)) } }), c("a", { innerText: "-", onclick: function () { } })]);
+            a(v, a(c("div"), r(j[k][0])));
+            break;
+        }
+        b.push(v);
+      }
+      return b;
+    }
+
+    ajf();
+
+    document.querySelectorAll('#m a').forEach(el => window.location.href.endsWith(el.href) ? el.classList.add("a") : "");
+    let jd = JSON.parse(q('#cj')[0].value);
+    a(q("#c")[0], re(jd));
+
+  </script>
+</body>
+
+</html>

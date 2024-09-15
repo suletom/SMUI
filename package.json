@@ -1,0 +1,23 @@
+{
+  "name": "smui",
+  "version": "1.0.0",
+  "description": "Basic esp ui for projects",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suletom/SMUI.git"
+  },
+  "author": "suletom",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/suletom/SMUI/issues"
+  },
+  "homepage": "https://github.com/suletom/SMUI#readme",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "express": "^4.21.0"
+  }
+}

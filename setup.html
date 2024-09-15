@@ -1,0 +1,34 @@
+<div id="s">
+  <pre>Flash real id:   001640C8
+Flash real size: 4194304
+Flash ide size: 4194304
+Flash ide speed: 40000000
+Flash ide mode:  DOUT
+Chip conf ok.
+</pre>
+  <form method="POST" action="/update" enctype="multipart/form-data">
+    Firmware:<br>
+    <input type="file" accept=".bin,.bin.gz" name="firmware" />
+    <a href="javascript:void(0);" onclick="cf()?this.closest('form').submit():void(0);">Update Firmware</a>
+  </form>
+  <a href="javascript:void(0);" onclick="postfile('/config','config.json',document.getElementById('c').value);">Apply
+    config!</a><br />
+  <a href="/?reset=1" onclick="return cf();">Reboot!</a><br />
+  <a href="/?factoryreset=1" onclick="cf();">Factory Reset!</a><textarea
+    id="cj">{"smui_wifipw":"123456789","smui_ssid":"gate","smui_ap_to_connect":"openwrt-suletom3","smui_ap_pw":"euB2Tooj","ir":false,"maxtime":30,"maxwin":1000,"relaydelay":0,"crelaydelay":0,"closedstop":0,"openstop":0,"irstop":0,"moveout":0,"movedir":0,"pwmout":0,"inverted_inputs":true}</textarea>
+  <pre>71: Serial init.
+95: loadConfiguration start...
+95: /config.json
+102: Config definition parsed!
+106: Json config read successfully!
+121: {"smui_wifipw":"123456789","smui_ssid":"gate","smui_ap_to_connect":"openwrt-suletom3","smui_ap_pw":"euB2Tooj","ir":false,"maxtime":30,"maxwin":1000,"relaydelay":0,"crelaydelay":0,"closedstop":0,"openstop":0,"irstop":0,"moveout":0,"movedir":0,"pwmout":0,"inverted_inputs":true}
+122: Config:
+146: {"smui_wifipw":"123456789","smui_ssid":"gate","smui_ap_to_connect":"openwrt-suletom3","smui_ap_pw":"euB2Tooj","ir":false,"maxtime":30,"maxwin":1000,"relaydelay":0,"crelaydelay":0,"closedstop":0,"openstop":0,"irstop":0,"moveout":0,"movedir":0,"pwmout":0,"inverted_inputs":true}
+148: INIT Wifi: WIFI_AP_STA
+153: Creating AP:
+153: gate3A78
+153: 123456789
+1040: Connecting to AP:
+1040: openwrt-suletom3
+</pre>
+</div>
