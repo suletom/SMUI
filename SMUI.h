@@ -10,7 +10,7 @@
 #include <PJsonstore.h>
 #include "FS.h"
 
-//https://tttapa.github.io/ESP8266/Chap12%20-%20Uploading%20to%20Server.html
+/*https://tttapa.github.io/ESP8266/Chap12%20-%20Uploading%20to%20Server.html*/
 
 #define SMUI_CONFIG_TOKEN 96
 
@@ -358,8 +358,7 @@ class smui{
                 'Content-Type: text/plain' + '\r\n' + 
                 '' + '\r\n' + 
                 d + '\r\n' + 
-                '--' + boundary + '--' + 
-                ''; 
+                '--' + boundary + '--'; 
                 xhr.onreadystatechange = function() {
                   if (xhr.readyState == XMLHttpRequest.DONE) {
                       alert(xhr.responseText);
@@ -423,15 +422,12 @@ class smui{
           if(fsUploadFile) {
             fsUploadFile.close();
             
-            server.sendHeader("Location","/success.html");      // Redirect the client to the success page
-            server.send(303);
+            smui_httpServer.send(200,"text/plain", "Upload OK");
           } else {
-            server.send(500, "text/plain", "500: couldn't create file");
+            smui_httpServer.send(500, "text/plain", "500: couldn't create file");
           }
         }
-        
-        String s = "OK:"+tm;
-        smui_httpServer.send(200, "text/html", templ(1, s));
+                
         return;
 
     }
