@@ -6,14 +6,17 @@ var app = express();
 
 app.use(bodyParser.json());
 
-let t = "";
+function gett(){
 
-try {
-    t = fs.readFileSync('template.html', { encoding: 'utf8', flag: 'r' });
-} catch (e) {
-    console.log(e);
-}
+    let t = "";
 
+    try {
+        t = fs.readFileSync('template.html', { encoding: 'utf8', flag: 'r' });
+    } catch (e) {
+        console.log(e);
+    }
+    return t;
+}    
 
 app.get('/', function (req, res) {
 
@@ -24,6 +27,8 @@ app.get('/', function (req, res) {
     } catch (e) {
         console.log(e);
     }
+
+    let t=gett();
 
     let d = t;
     d=d.replace("<!--sc-->", sc);
@@ -49,6 +54,8 @@ app.get('/setup', function (req, res) {
         console.log(e);
     }
 
+    let t=gett();
+
     let d = t;
     d=d.replace("<!--sc-->", sc);
     res.send(d);
@@ -56,6 +63,30 @@ app.get('/setup', function (req, res) {
 });
 
 app.get('/setup/ajax', function (req, res) {
+    let d="dyn cont setup";
+    res.send(d);
+
+});
+
+app.get('/configure', function (req, res) {
+
+    let sc = "";
+
+    try {
+        sc = fs.readFileSync('configure.html', { encoding: 'utf8', flag: 'r' });
+    } catch (e) {
+        console.log(e);
+    }
+
+    let t=gett();
+
+    let d = t;
+    d=d.replace("<!--sc-->", sc);
+    res.send(d);
+
+});
+
+app.get('/configure/ajax', function (req, res) {
     let d="dyn cont setup";
     res.send(d);
 
