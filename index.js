@@ -26,14 +26,14 @@ app.get('/', function (req, res) {
     }
 
     let d = t;
-    d.replace("<!--sc-->", sc);
+    d=d.replace("<!--sc-->", sc);
     res.send(d);
 
 });
 
 app.get('/ajax', function (req, res) {
 
-    let d = "";
+    let d = "dyn cont main";
 
     res.send(d);
 
@@ -50,13 +50,19 @@ app.get('/setup', function (req, res) {
     }
 
     let d = t;
-    d.replace("<!--sc-->", sc);
+    d=d.replace("<!--sc-->", sc);
+    res.send(d);
+
+});
+
+app.get('/setup/ajax', function (req, res) {
+    let d="dyn cont setup";
     res.send(d);
 
 });
 
 app.listen(6789, function () {
 
-    console.log("Web ui running on port 6789! Access: http://localhost");
+    console.log("Web ui running on port 6789! Access: http://localhost:6789");
 
 });

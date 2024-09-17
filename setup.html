@@ -1,20 +1,37 @@
 <div id="s">
-  <pre>Flash real id:   001640C8
+
+  <a href="/?reset=1" onclick="return cf();">Reboot!</a><br />
+
+  <div id="u">
+    <label>Firmware</label>
+    <pre>Flash real id:   001640C8
 Flash real size: 4194304
 Flash ide size: 4194304
 Flash ide speed: 40000000
 Flash ide mode:  DOUT
-Chip conf ok.
 </pre>
-  <form method="POST" action="/update" enctype="multipart/form-data">
-    Firmware:<br>
-    <input type="file" accept=".bin,.bin.gz" name="firmware" />
-    <a href="javascript:void(0);" onclick="cf()?this.closest('form').submit():void(0);">Update Firmware</a>
-  </form>
-  <a href="javascript:void(0);" onclick="postfile('/config','config.json',document.getElementById('c').value);">Apply
-    config!</a><br />
-  <a href="/?reset=1" onclick="return cf();">Reboot!</a><br />
-  <a href="/?factoryreset=1" onclick="cf();">Factory Reset!</a><textarea
+    <a href="/?backup=1" ;">Backup firmware!</a><br />
+    <form method="POST" action="/update" enctype="multipart/form-data">
+      <input type="file" accept=".bin,.bin.gz" name="firmware" />
+      <a href="javascript:void(0);" onclick="cf()?this.closest('form').submit():void(0);">Update Firmware</a>
+    </form>
+  </div>
+  <div id="c">
+    <label>Config</label>
+    <a href="/?backupcf=1" ;">Backup Config!</a><br />
+    <form method="POST" action="/updatecf" enctype="multipart/form-data">
+      <input type="file" accept=".json" name="config" />
+      <a href="javascript:void(0);" onclick="cf()?this.closest('form').submit():void(0);">Restore Config</a>
+    </form>
+
+    <a href="javascript:void(0);" onclick="postfile('/config','config.json',document.getElementById('c').value);">Commit 
+      config to flash!</a><br />
+  </div>
+    
+  <a href="/?factoryreset=1" onclick="cf();">Factory Reset!</a>
+  
+  <!--
+  <textarea
     id="cj">{"smui_wifipw":"123456789","smui_ssid":"gate","smui_ap_to_connect":"openwrt-suletom3","smui_ap_pw":"euB2Tooj","ir":false,"maxtime":30,"maxwin":1000,"relaydelay":0,"crelaydelay":0,"closedstop":0,"openstop":0,"irstop":0,"moveout":0,"movedir":0,"pwmout":0,"inverted_inputs":true}</textarea>
   <pre>71: Serial init.
 95: loadConfiguration start...
@@ -31,4 +48,5 @@ Chip conf ok.
 1040: Connecting to AP:
 1040: openwrt-suletom3
 </pre>
+-->
 </div>

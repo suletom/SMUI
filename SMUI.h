@@ -481,13 +481,7 @@ class smui{
         s += tmp;
         sprintf(tmp, "Flash ide mode:  %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
         s += tmp;
-        if (ideSize != realSize) {
-          sprintf(tmp, "Chip conf wrong!\n");
-          s += tmp;
-        } else {
-          sprintf(tmp, "Chip conf ok.\n");
-          s += tmp;
-        }  
+        
         
         s += "</pre>";
 
@@ -496,8 +490,10 @@ class smui{
          Firmware:<br>
          <input type="file" accept=".bin,.bin.gz" name="firmware" />
          <a href="javascript:void(0);" onclick="cf()?this.closest('form').submit():void(0);">Update Firmware</a>
-        </form>  
+        </form>
+        <a href="/?backup=1";">Backup firmware!</a><br />
         <a href="javascript:void(0);" onclick="postfile('/config',document.getElementById('c').value);">Apply config!</a><br />
+        
         <a href="/?reset=1" onclick="return cf();">Reset!</a><br />
         <a href="/?factoryreset=1" onclick="cf();">Factory Reset!</a>)=";
 
