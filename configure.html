@@ -1,0 +1,40 @@
+<div id="c">
+</div>
+<script>
+let cd={
+  "smui_wifipw": ["12345678","WIFI password"],
+  "smui_ssid": ["gate","Device name: SSID, .local hostname"],
+  "smui_ap_to_connect": ["openwrt-suletom3","WIFI AP SSID (to connect to) - otherwise leave blank"],  
+  "smui_ap_pw": ["12345678","WIFI AP pw"],
+  "ir": [false,"USE IR gate detector"],
+  "maxtime": [30,"MAX openning time in secs"],  
+  "maxwin": [1000,"PWM motor control [1-100]"],
+  "relaydelay": [0,"Relay off delay in msec"],
+  "crelaydelay": [0,"Direction changer relay off delay in msec"],
+  "closedstop": [0,"Closed stop (input) pin number"],
+  "openstop": [0,"Opened stop (input) pin number"],
+  "irstop": [0,"IR stop (input) pin number"],
+  "moveout": [0,"Start move (output) pin number"],
+  "movedir": [0,"Move direction (output) pin number"],
+  "pwmout": [0,"Movement spin up PWM (output) pin number"],
+  "inverted_inputs": [true,"Inverted inputs"],
+  "codes": [{"cname": ["name1","Code name"],"cval": ["","code value"],"list": [[{"k":"key","v":"val"},{"k":"key2","v":"val2"}],"Listelements"] },"Codes"],
+  "list": [[{"k":"key","v":"val"},{"k":"key2","v":"val2"}],"Listelements"]
+};
+
+a(q("#c")[0], re(cd));
+
+
+/*
+requirements: 
+UI by types -> validators: 
+int: (positive 4byte): min, max
+string: min, max (chars)
+boolean: (byte type: 0/1 select list)
+object: (recursion: any of the other types): min, max
+Array: (select list of key/val elmenets, single select): exclusive on level?
+
+*/
+
+</script>
+
