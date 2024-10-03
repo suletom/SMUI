@@ -130,6 +130,11 @@
       return o.querySelectorAll(s);
     }
 
+    function gl(e){
+      let t=c("select");
+      e.forEach(function(i){ a(t,c("option",{"innerText":i.v,"name":i.n})) });
+      return t;
+    }
     
     function re(j) {
       let b = [];
@@ -143,12 +148,16 @@
             break;
           case 'string': a(v, c("input", { type: "text", name: k, value: j[k][0] }));
             break;
-          //a(c("div"),c("a",{innerText:"+",onclick:function(){q('div',this.parentNode).forEach(function(i){a(i.parentNode,i.cloneNode(true))})} }))
-          //q('div',this.parentNode).forEach(function(i){a(i.parentNode,i.cloneNode(true))})
-          //a(v,a(c("div"),[c("a",{innerText:"+",onclick:function(){} }),c("a",{innerText:"-",onclick:function(){} })])); 
-
-          case 'object': a(v, [c("a", { innerText: "+", onclick: function () { a(this.parentNode, q("div", this.parentNode)[0].cloneNode(true)) } }), c("a", { innerText: "-", onclick: function () { } })]);
-            a(v, a(c("div"), re(j[k][0])));
+          
+          case 'object': 
+            if (Array.isArray(j[k][0])) {
+              //list
+              a(v,gl(j[k][0]));
+            }else{
+              //object
+              a(v, [c("a", { innerText: "+", onclick: function () { a(this.parentNode, q("div", this.parentNode)[0].cloneNode(true)) } }), c("a", { innerText: "-", onclick: function () { } })]);
+              a(v, a(c("div"), re(j[k][0])));
+            }  
             break;
         }
         b.push(v);
