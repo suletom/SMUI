@@ -130,15 +130,32 @@
       return o.querySelectorAll(s);
     }
 
-    function gl(e){
-      let t=c("select");
-      e.forEach(function(i){ a(t,c("option",{"innerText":i.v,"name":i.n})) });
+    function gl(e,n,u=0){
+      let fn=function(){ console.log('onchange :',this); let t=this; this.parentNode.parentNode.querySelectorAll('div > div > select[name="'+this.name+'"] option').forEach(function(e){
+        console.log(e);
+          if (t.value==e.value) {
+            console.log("=");
+            if (t!==e){
+              console.log("!=");
+              e.seleted=false;
+              e.disabled=true;
+            }
+          }
+        });
+      };
+      if (u==0) fn=function() {};
+      let t=c("select",{'onchange':fn , 'name':n});
+      let k=0;
+      
+      e.forEach(function(i){ let o={"innerText":i.v,"value":i.k};  if (k==0) o.selected=true; console.log(o); a(t,c("option",o)); k++; });
       return t;
     }
     
     function re(j) {
       let b = [];
       for (var k in j) {
+        if (!Array.isArray(j[k]) || j[k].length < 2 ) continue;
+
         let v = c("div");
         a(v, c("label", j[k][1]));
         console.log(typeof j[k][0]);
@@ -152,7 +169,8 @@
           case 'object': 
             if (Array.isArray(j[k][0])) {
               //list
-              a(v,gl(j[k][0]));
+              
+              a(v,gl(j[k][0],k,(typeof j[k][2] !==undefined)?1:0));
             }else{
               //object
               a(v, [c("a", { innerText: "+", onclick: function () { a(this.parentNode, q("div", this.parentNode)[0].cloneNode(true)) } }), c("a", { innerText: "-", onclick: function () { } })]);
