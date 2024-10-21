@@ -100,13 +100,21 @@
       xhr.send(body);
     }
 
-    function isi(e, u) {
+    /**
+     * Forces event key to be numeric 
+     * @param {Event} e Event object
+     * @param {Number} m  Maximum value
+    */
+    function isi(e, m) {
       var c = (e.which) ? e.which : e.keyCode
       if (c == 8 || c == 37) return;
       e.target.value = e.target.value.replace(/[^0-9]/g, "");
-      if (e.target.value > u) e.target.value = u;
+      if (e.target.value > m) e.target.value = m;
     }
 
+    /**
+     * Confirm dialog
+    */
     function cf() {
       if (confirm("Sure?")) {
         return true;
@@ -114,35 +122,67 @@
       return false;
     }
 
+    /**
+     * Create element
+     * @param {String} s Element name
+     * @param {Object|String} c Optional: InnerHTML as string or Element attributes to append as object
+    */
     function c(s, c = "") {
       let e = document.createElement(s);
       (typeof c == "object") ? Object.assign(e, c) : e.innerHTML = c;
       return e;
     }
 
+    /**
+    * Append element
+    * @param {Element} e Element to append to
+    * @param {Object|String} c InnerHTML as string or Elements as object
+    */
     function a(e, c) {
       if (Array.isArray(c)) c.forEach(function (i) { e.appendChild(i) });
       else typeof c == "string" ? e.innerHTML += c : e.appendChild(c);
       return e;
     }
     
+    /**
+     * Query
+     * @param {String} s Selector
+     * @param {Object} o Optional: Node to search on
+    */
     function q(s, o = document) {
       return o.querySelectorAll(s);
     }
 
-    function gl(e,n,u=0){
-      let fn=function(){ console.log('onchange :',this); let t=this; this.parentNode.parentNode.querySelectorAll('div > div > select[name="'+this.name+'"] option').forEach(function(e){
-        console.log(e);
-          if (t.value==e.value) {
-            console.log("=");
-            if (t!==e){
-              console.log("!=");
-              e.seleted=false;
-              e.disabled=true;
-            }
+    /**
+     * Select option exlusion
+     * @param {Object} e Select Node
+     * 
+     */ 
+    function co(t) {
+        let s=t.parentNode.parentNode.querySelectorAll('div > div > select[name="'+t.name+'"]');
+        a=[];
+        for(let i=0;i<s.length;i++){
+          if (s[i]===t) break;
+          s[i].options.forEach(function(e){
+            if (e.selected) a.push[e];
+          });
+        }
+        k=0;
+        for(let i=0;i<t.options.length;i++){
+          if (a.includes(t.options[i])) {t.options[i].disabled=true; t.options[i].selected=false;}
+          if (k==0 && t.options[i].disabled==false) {
+            t.options[i].selected=true;
+            k++;
           }
-        });
-      };
+        }
+    }
+
+    /**
+     * Generate List
+     * 
+     */
+    function gl(e,n,u=0){
+      let fn=window.co;
       if (u==0) fn=function() {};
       let t=c("select",{'onchange':fn , 'name':n});
       let k=0;
