@@ -158,7 +158,12 @@
      * @param {Object} e Select Node
      * 
      */ 
-    function co(t) {
+    function co(t=null) {
+        console.log("co");
+        console.log("this in co:",this);
+        console.log("t in co:",t);
+        if (t["target"]!==undefined) t=t.target;
+        console.log("t:",t);
         let s=t.parentNode.parentNode.querySelectorAll('div > div > select[name="'+t.name+'"]');
         a=[];
         for(let i=0;i<s.length;i++){
@@ -167,14 +172,17 @@
             if (e.selected) a.push[e];
           });
         }
+        console.log("prev selects on level:",a);
         k=0;
         for(let i=0;i<t.options.length;i++){
-          if (a.includes(t.options[i])) {t.options[i].disabled=true; t.options[i].selected=false;}
+          if (a.includes(t.options[i])) {t.options[i].disabled=true; t.options[i].selected=false; console.log("set current opt disabled:",t.options[i]); }
           if (k==0 && t.options[i].disabled==false) {
             t.options[i].selected=true;
+            console.log("set current opt selected:",t.options[i]);
             k++;
           }
         }
+        return true;
     }
 
     /**
@@ -189,6 +197,20 @@
       
       e.forEach(function(i){ let o={"innerText":i.v,"value":i.k};  if (k==0) o.selected=true; console.log(o); a(t,c("option",o)); k++; });
       return t;
+    }
+
+    /**
+     * Clone node with events
+     * @param {Node} n Node
+     */ 
+    function cn(n){
+      console.log("clone:",n);
+      let c=n.cloneNode();
+      if (typeof n.onchange=="function") c.onchange=n.onchange;
+      for(let i=0;i<n.childNodes.length;i++){
+        c.appendChild(cn(n.childNodes[i]))
+      }
+      return c;
     }
     
     function re(j) {
@@ -213,7 +235,7 @@
               a(v,gl(j[k][0],k,(typeof j[k][2] !==undefined)?1:0));
             }else{
               //object
-              a(v, [c("a", { innerText: "+", onclick: function () { a(this.parentNode, q("div", this.parentNode)[0].cloneNode(true)) } }), c("a", { innerText: "-", onclick: function () { } })]);
+              a(v, [c("a", { innerText: "+", onclick: function () { a(this.parentNode, q("div", cn(this.parentNode))[0]); console.log(q("div", this.parentNode)[0]); } }), c("a", { innerText: "-", onclick: function () { } })]);
               a(v, a(c("div"), re(j[k][0])));
             }  
             break;
