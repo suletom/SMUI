@@ -164,24 +164,43 @@
         console.log("t in co:",t);
         if (t["target"]!==undefined) t=t.target;
         console.log("t:",t);
-        let s=t.parentNode.parentNode.querySelectorAll('div > div > select[name="'+t.name+'"]');
+        let s=t.parentNode.parentNode.parentNode.querySelectorAll('div > div > select[name="'+t.name+'"]');
+        console.log("search here:",t.parentNode.parentNode.parentNode);
+        console.log(s.length);
         a=[];
         for(let i=0;i<s.length;i++){
           if (s[i]===t) break;
           s[i].options.forEach(function(e){
-            if (e.selected) a.push[e];
+            if (e.selected) a.push(e);
           });
         }
-        console.log("prev selects on level:",a);
+        console.log("t.selectedOptions:",t);
+        console.log("same selects on level:",s);
+        console.log();
+        for(let i=0;i<s.length;i++){
+          for(let j=0;j<s[i].options.length;j++){
+            
+            for(let k=0;k<t.selectedOptions.length;k++){
+              if ((t!==s[i]) && t.selectedOptions[k].value==s[i].options[j].value) {
+                s[i].options[j].disabled=true;
+                s[i].options[j].selected=false;
+              }
+            }
+
+            
+          }
+        }
+        /*
         k=0;
         for(let i=0;i<t.options.length;i++){
           if (a.includes(t.options[i])) {t.options[i].disabled=true; t.options[i].selected=false; console.log("set current opt disabled:",t.options[i]); }
           if (k==0 && t.options[i].disabled==false) {
-            t.options[i].selected=true;
+            //t.options[i].selected=true;
             console.log("set current opt selected:",t.options[i]);
             k++;
           }
         }
+        */
         return true;
     }
 
